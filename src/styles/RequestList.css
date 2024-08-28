@@ -1,0 +1,23 @@
+.request-list {
+    margin-top: 20px;
+  }
+  
+  .request-item {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+  
+  .request-item:hover {
+    background-color: #e9ecef;
+  }
+  
+  .request-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+  }
+  

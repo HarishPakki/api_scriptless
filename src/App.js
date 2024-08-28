@@ -1,24 +1,18 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ApiTool from './components/apiTool';
+import ApiRequestDetails from './components/ApiRequestDetails';
+import ApiExecution from './components/ApiExecution';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<ApiTool />} />
+        <Route path="/request-details/:projectName/:apiCollectionName" element={<ApiRequestDetails />} />
+        <Route path="/execution/:projectName/:apiCollectionName" element={<ApiExecution />} />
+      </Routes>
+    </Router>
   );
 }
 

@@ -1,0 +1,21 @@
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .results-table th,
+  .results-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  .passed {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .failed {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  
