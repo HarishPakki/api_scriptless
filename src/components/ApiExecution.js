@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import '../styles/apiExecution.css';
+import LogModal from './LogModal'; // Import a modal component for logs
 
 function ApiExecution() {
   const { projectName, collectionName } = useParams();
@@ -9,6 +10,7 @@ function ApiExecution() {
   const [excelData, setExcelData] = useState([]);
   const [executionResults, setExecutionResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedLogs, setSelectedLogs] = useState(null);
 
   useEffect(() => {
     if (!projectName || !collectionName) {
@@ -41,6 +43,21 @@ function ApiExecution() {
     reader.readAsBinaryString(file);
   };
 
+  const replacePlaceholders = (obj, testData) => {
+    if (typeof obj === 'string') {
+      Object.keys(testData).forEach(key => {
+        obj = obj.replace(new RegExp(`{${key}}`, 'g'), testData[key]);
+      });
+      return obj;
+    } else if (typeof obj === 'object') {
+      Object.keys(obj).forEach(key => {
+        obj[key] = replacePlaceholders(obj[key], testData);
+      });
+      return obj;
+    }
+    return obj;
+  };
+
   const executeRequests = async () => {
     setLoading(true);
     const results = [];
@@ -55,22 +72,13 @@ function ApiExecution() {
         let modifiedRequest = { ...request };
         const log = { originalUrl: request.url, modifiedUrl: '', headers: request.headers, body: request.body, status: '' };
 
-        // Replace placeholders in the URL
-        Object.keys(testData).forEach(key => {
-          modifiedRequest.url = modifiedRequest.url.replace(new RegExp(`{${key}}`, 'g'), testData[key]);
-        });
-
+        // Replace placeholders in the URL and body
+        modifiedRequest.url = replacePlaceholders(modifiedRequest.url, testData);
         log.modifiedUrl = modifiedRequest.url;
 
-        // Replace placeholders in the body if it's a POST request
         if (modifiedRequest.method === 'POST' && modifiedRequest.body) {
-          let body = JSON.parse(modifiedRequest.body);
-          Object.keys(testData).forEach(key => {
-            if (body[key] !== undefined) {
-              body[key] = testData[key];
-            }
-          });
-          modifiedRequest.body = JSON.stringify(body);
+          modifiedRequest.body = replacePlaceholders(JSON.parse(modifiedRequest.body), testData);
+          modifiedRequest.body = JSON.stringify(modifiedRequest.body);
         }
 
         // Execute the request
@@ -104,18 +112,12 @@ function ApiExecution() {
     setLoading(false);
   };
 
-  const openLogPopup = (logs) => {
-    const logDetails = logs.map((log, index) => `
-      Request ${index + 1}:
-      Original URL: ${log.originalUrl}
-      Modified URL: ${log.modifiedUrl}
-      Headers: ${JSON.stringify(log.headers, null, 2)}
-      Body: ${log.body}
-      Status: ${log.status}
-      Error: ${log.error || 'None'}
-    `).join('\n\n');
+  const openLogModal = (logs) => {
+    setSelectedLogs(logs);
+  };
 
-    alert(`Request Log:\n${logDetails}`);
+  const closeLogModal = () => {
+    setSelectedLogs(null);
   };
 
   return (
@@ -174,7 +176,7 @@ function ApiExecution() {
                       <td>{result.jiraId}</td>
                       <td>{result.status}</td>
                       <td>
-                        <button onClick={() => openLogPopup(result.logs)}>View Logs</button>
+                        <button onClick={() => openLogModal(result.logs)}>View Logs</button>
                       </td>
                     </tr>
                   ))}
@@ -183,6 +185,10 @@ function ApiExecution() {
             </div>
           )}
         </>
+      )}
+
+      {selectedLogs && (
+        <LogModal logs={selectedLogs} onClose={closeLogModal} />
       )}
     </div>
   );
