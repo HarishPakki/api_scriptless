@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/apiTool.css';
-import ApiTable from './ApiTable'; // Ensure correct import of ApiTable
+import ApiTable from './ApiTable';
 
 function ApiTool() {
   const [projectName, setProjectName] = useState('');
@@ -11,7 +11,6 @@ function ApiTool() {
   const [savedRequests, setSavedRequests] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch saved requests when the component is mounted
   useEffect(() => {
     fetch('http://localhost:5000/get-requests')
       .then((response) => response.json())
@@ -27,7 +26,6 @@ function ApiTool() {
         const parsedRequests = json.requests || [];
         setRequests(parsedRequests);
 
-        // Navigate to request details page with project, collection, and requests
         navigate(`/request-details/${project}/${apiCollection}`, {
           state: { projectName: project, apiCollectionName: apiCollection, requests: parsedRequests },
         });
@@ -82,7 +80,7 @@ function ApiTool() {
         </button>
       </div>
 
-      <ApiTable savedRequests={savedRequests} /> {/* Display saved requests in the table */}
+      <ApiTable savedRequests={savedRequests} />
 
       {showProjectPopup && (
         <div className="modal-overlay">

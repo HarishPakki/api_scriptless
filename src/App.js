@@ -10,7 +10,9 @@ function App() {
       <Routes>
         <Route path="/" element={<ApiTool />} />
         <Route path="/request-details/:projectName/:apiCollectionName" element={<ApiRequestDetails />} />
-        <Route path="/execution/:projectName/:apiCollectionName" element={<ApiExecution />} />
+        <Route path="/execution/:projectName/:collectionName" element={<ApiExecution />} />
+        {/* <Route path="/request-details/:collectionName" element={<ApiExecution />} /> */}
+
       </Routes>
     </Router>
   );

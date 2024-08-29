@@ -45,7 +45,7 @@ app.post('/generate-testcases', async (req, res) => {
         for (const [index, request] of requests.entries()) {
             try {
                 const question = generateTestCaseQuestion(request, projectName, apiCollectionName);  // Generate question
-                const output = await generator(question, { max_new_tokens: 5000000 });
+                const output = await generator(question, { max_new_tokens: 500 });
 
                 // Ensure the output is valid and process steps to remove duplicates
                 if (output && output[0] && output[0].generated_text) {

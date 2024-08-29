@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import '../styles/apiRequestDetails.css';
+import '../styles/loading.css';
 import TestDataPopup from './TestDataPopup';
 
 function ApiRequestDetails() {
@@ -12,7 +13,9 @@ function ApiRequestDetails() {
   const [showPopup, setShowPopup] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState('');
+
   useEffect(() => {
     if (!projectName || !apiCollectionName || requests.length === 0) {
       navigate('/');
@@ -63,11 +66,11 @@ function ApiRequestDetails() {
 
   const handleGenerateTestCases = async () => {
     setIsGenerating(true);
-    
-    try {
-      // Send the request to the backend to generate test cases
-      const payload = { projectName, apiCollectionName, requests };
+    setLoadingMessage('We are generating test cases for you, please wait...');
+    setLoadingProgress(0);
 
+    try {
+      const payload = { projectName, apiCollectionName, requests };
       const response = await fetch('http://localhost:5000/generate-testcases', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,7 +80,6 @@ function ApiRequestDetails() {
       if (response.ok) {
         const { testCases } = await response.json();
 
-        // Convert the received test cases into an Excel format
         const worksheet = XLSX.utils.json_to_sheet(testCases);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Test Cases');
@@ -93,6 +95,7 @@ function ApiRequestDetails() {
       alert("Failed to generate test cases.");
     } finally {
       setIsGenerating(false);
+      setLoadingMessage('');
     }
   };
 
@@ -101,9 +104,18 @@ function ApiRequestDetails() {
       <h1 className="title">Project Name: {projectName}</h1>
       <h2 className="sub-title">API Collection: {apiCollectionName}</h2>
 
+      <div className="button-container">
+        <button onClick={handleGenerateTestCases} className="generate-testcase-btn" disabled={isGenerating}>
+          {isGenerating ? 'Generating...' : 'Generate Test Cases'}
+        </button>
+      </div>
+
       {isGenerating && (
-        <div className="loading">
-          <p>We are generating test cases for you, please wait...</p>
+        <div className="loading-container">
+          <div className="loading-bar">
+            <div className="loading-progress" style={{ width: `${loadingProgress}%` }}></div>
+          </div>
+          <p>{loadingMessage}</p>
         </div>
       )}
 
@@ -139,9 +151,6 @@ function ApiRequestDetails() {
       <div className="button-group">
         <button onClick={handleSubmitAll} className="submit-all-btn">
           Submit All Requests
-        </button>
-        <button onClick={handleGenerateTestCases} className="generate-testcase-btn" disabled={isGenerating}>
-          {isGenerating ? 'Generating...' : 'Generate Test Cases'}
         </button>
       </div>
 
