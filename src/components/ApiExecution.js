@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import '../styles/apiExecution.css';
-import LogModal from './LogModal'; // Import a modal component for logs
+import LogModal from './LogModal';
 
 function ApiExecution() {
   const { projectName, collectionName } = useParams();
+  const navigate = useNavigate();
   const [requestDetails, setRequestDetails] = useState(null);
   const [excelData, setExcelData] = useState([]);
   const [executionResults, setExecutionResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedLogs, setSelectedLogs] = useState(null);
+  const [proxySettings, setProxySettings] = useState(null);
+  const [envVariables, setEnvVariables] = useState(null);
 
   useEffect(() => {
     if (!projectName || !collectionName) {
@@ -18,6 +21,7 @@ function ApiExecution() {
       return;
     }
 
+    // Load request details
     fetch(`http://localhost:5000/get-collection/${projectName}/${collectionName}`)
       .then(response => {
         if (!response.ok) {
@@ -27,6 +31,20 @@ function ApiExecution() {
       })
       .then(data => setRequestDetails(data))
       .catch(error => console.error('Error fetching collection details:', error));
+
+    // Load proxy settings and environment variables
+    fetch(`http://localhost:5000/get-settings/${projectName}/${collectionName}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        setProxySettings(data.proxySettings || null);
+        setEnvVariables(data.envVariables || null);
+      })
+      .catch(error => console.error('Error fetching settings:', error));
   }, [projectName, collectionName]);
 
   const handleExcelUpload = (e) => {
@@ -58,9 +76,25 @@ function ApiExecution() {
     return obj;
   };
 
+  const extractValueFromResponse = (response, key) => {
+    const keys = key.split('.');
+    let value = response;
+    for (let k of keys) {
+      if (k.includes('{')) {
+        const [arrayKey, condition] = k.split('{');
+        const [conditionKey, conditionValue] = condition.replace('}', '').split('=');
+        value = value[arrayKey].find(item => item[conditionKey] === conditionValue);
+      } else {
+        value = value[k];
+      }
+    }
+    return value;
+  };
+
   const executeRequests = async () => {
     setLoading(true);
     const results = [];
+    const responseStore = {}; // Store all responses to use in subsequent requests
 
     for (let i = 0; i < excelData.length; i++) {
       const testData = excelData[i];
@@ -70,36 +104,59 @@ function ApiExecution() {
       for (let j = 0; j < requestDetails.requests.length; j++) {
         const request = requestDetails.requests[j];
         let modifiedRequest = { ...request };
-        const log = { originalUrl: request.url, modifiedUrl: '', headers: request.headers, body: request.body, status: '' };
+        const log = {
+          originalUrl: request.url,
+          modifiedUrl: '',
+          headers: request.headers,
+          body: request.body,
+          status: '',
+          response: null
+        };
 
-        // Replace placeholders in the URL and body
+        // Replace placeholders in the URL, headers, and body
         modifiedRequest.url = replacePlaceholders(modifiedRequest.url, testData);
-        log.modifiedUrl = modifiedRequest.url;
-
+        modifiedRequest.headers = replacePlaceholders(modifiedRequest.headers, testData);
         if (modifiedRequest.method === 'POST' && modifiedRequest.body) {
           modifiedRequest.body = replacePlaceholders(JSON.parse(modifiedRequest.body), testData);
           modifiedRequest.body = JSON.stringify(modifiedRequest.body);
         }
 
-        // Execute the request
+        // Log the modified request details
+        log.modifiedUrl = modifiedRequest.url;
+        log.headers = modifiedRequest.headers;
+        log.body = modifiedRequest.body;
+
         try {
           const response = await fetch(modifiedRequest.url, {
             method: modifiedRequest.method,
             headers: modifiedRequest.headers,
             body: modifiedRequest.method === 'POST' ? modifiedRequest.body : undefined,
+            mode: 'cors'
           });
 
           log.status = response.ok ? 'Passed' : 'Failed';
+          log.response = await response.json();
           if (!response.ok) {
             const errorText = await response.text();
             log.error = `Request failed with status ${response.status}: ${errorText}`;
             testCaseStatus = 'Failed';
+            break; // Stop further requests in the current test case
           }
+
+          // Store the response for use in subsequent requests
+          responseStore[`response${j + 1}`] = log.response;
+
+          // Automatically replace x-acc-op in subsequent requests
+          if (log.response['x-acc-op']) {
+            testData['x-acc-op'] = log.response['x-acc-op'];
+          }
+
         } catch (error) {
           console.error('Error executing request:', error);
           log.status = 'Failed';
           log.error = `Request failed due to an exception: ${error.message}`;
           testCaseStatus = 'Failed';
+          break; // Stop further requests in the current test case
         }
 
         testCaseResults.push(log);
@@ -120,9 +177,18 @@ function ApiExecution() {
     setSelectedLogs(null);
   };
 
+  const goToHomePage = () => {
+    navigate('/'); // Redirect to the home page
+  };
+
   return (
     <div className="execution-page-container">
       <h1>API Execution: {collectionName}</h1>
+
+      <div className="top-right-links">
+        <button className="home-link" onClick={goToHomePage}>Home</button>
+        <a href="#" className="help-link">Need Help?</a>
+      </div>
 
       {requestDetails && (
         <>
@@ -195,3 +261,4 @@ function ApiExecution() {
 }
 
 export default ApiExecution;
+

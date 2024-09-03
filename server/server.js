@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const compromise = require('compromise');  // Add compromise for NLP
 
 const app = express();
 app.use(express.json());
@@ -14,56 +15,83 @@ if (!fs.existsSync(savedRequestsDir)) {
     fs.mkdirSync(savedRequestsDir);
 }
 
-// Helper function to remove duplicate steps
+// Helper function to format and remove duplicate steps
 const processGeneratedSteps = (steps) => {
     const allSteps = steps.split(/[.;\n]+/).map(step => step.trim()).filter(step => step);
     const uniqueSteps = [...new Set(allSteps)];
     return uniqueSteps.join('. ');
 };
 
-// Helper function to dynamically create a question for the transformer
-const generateTestCaseQuestion = (request, projectName, apiCollectionName) => {
-    const urlParts = request.url.split('/').slice(3).join(', ');  // Extract the URL path segments after domain
-    const bodyData = request.body ? JSON.parse(request.body) : {};
-    const testData = Object.entries(bodyData).map(([key, value]) => `${key}=${value}`).join(', ');
-
-    // Return the question formatted as per your request
-    return `Generate testcase steps for an API ${request.method} request with parameters in URL ${urlParts} and test data as ${testData}. `;
+// Helper function to generate human-readable sentences for headers and body
+const generateReadableSentence = (key, value) => {
+    return `Set the ${key.replace(/-/g, ' ')} to be ${value}.`;
 };
 
-// Route to generate test cases using transformers
+// Function to generate detailed test cases
+const generateDetailedTestCases = (request) => {
+    const steps = [];
+
+    steps.push(`1. Set up the API endpoint: ${request.url}`);
+    
+    const headers = request.headers || {};
+    const headerSteps = Object.entries(headers).map(([key, value], index) => {
+        return generateReadableSentence(key, value);
+    }).join('\n');
+    
+    steps.push(`2. Include the following headers:\n${headerSteps}`);
+
+    if (request.method === 'POST' && request.body) {
+        const bodyData = JSON.parse(request.body);
+        const bodySteps = Object.entries(bodyData).map(([key, value]) => {
+            return generateReadableSentence(key, value);
+        }).join('\n');
+
+        steps.push(`3. Set the request body as follows:\n${bodySteps}`);
+    }
+
+    steps.push(`4. Send the ${request.method} request`);
+
+    const expectedResult = [
+        "1. The API should return a 200 OK status.",
+        "2. The response body should match the expected data structure.",
+        "3. The response should conform to the expected JSON schema."
+    ].join('\n');
+
+    return {
+        Steps: steps.join('\n'),
+        Expected_Result: expectedResult
+    };
+};
+
+// Function to generate test case description with up to 3 words from the URL
+const generateTestCaseDescription = (request) => {
+    const urlParts = request.url.split('/').filter(part => part && !part.includes('http')).slice(-3).join(', ');
+    return `Validate the ${request.method} request for ${urlParts}`;
+};
+
+// Route to generate test cases using NLP
 app.post('/generate-testcases', async (req, res) => {
     const { projectName, apiCollectionName, requests } = req.body;
 
     try {
-        // Dynamically import transformers
-        const { pipeline } = await import('@xenova/transformers');
-        const generator = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M');
-        
         const testCases = [];
 
         for (const [index, request] of requests.entries()) {
             try {
-                const question = generateTestCaseQuestion(request, projectName, apiCollectionName);  // Generate question
-                const output = await generator(question, { max_new_tokens: 500 });
+                const detailedTestCase = generateDetailedTestCases(request);
 
-                // Ensure the output is valid and process steps to remove duplicates
-                if (output && output[0] && output[0].generated_text) {
-                    const processedSteps = processGeneratedSteps(output[0].generated_text);  // Remove duplicate steps
-
-                    testCases.push({
-                        S_No: index + 1,
-                        Steps: processedSteps,
-                        Expected_Result: "Expected status code: 200 and correct response data."
-                    });
-                } else {
-                    throw new Error('Invalid output from transformer');
-                }
+                testCases.push({
+                    S_No: index + 1,
+                    Test_Case_Description: generateTestCaseDescription(request),
+                    Test_Steps: detailedTestCase.Steps,
+                    Expected_Result: detailedTestCase.Expected_Result
+                });
             } catch (err) {
                 console.error(`Error processing request ${index + 1}:`, err);
                 testCases.push({
                     S_No: index + 1,
-                    Steps: "Error generating steps",
+                    Test_Case_Description: "Error generating test case",
+                    Test_Steps: "Error generating steps",
                     Expected_Result: "Error generating expected result."
                 });
             }

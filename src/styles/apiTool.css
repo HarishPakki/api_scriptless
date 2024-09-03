@@ -1,126 +1,157 @@
 .api-tool-container {
-    padding: 20px;
-    background-color: #f5f5f5;
-    border-radius: 10px;
-    border: 2px solid #e0e0e0;
-    margin: 40px auto;
-    max-width: 1200px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  }
-  
-  .title {
-    text-align: center;
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin-bottom: 30px;
-    color: #606060;
-    background-color: #e0e0e0;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #b0b0b0;
-  }
-  
-  .top-controls {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 30px;
-    align-items: center;
-  }
-  
-  .dropdown-date-container {
-    display: flex;
-    gap: 15px;
-  }
-  
-  .dropdown, .date-input, .search-bar {
-    padding: 12px;
-    border: 1px solid #d0d0d0;
-    border-radius: 5px;
-    background-color: #f8f8f8;
-    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.05);
-  }
-  
-  .search-bar {
-    width: 300px;
-  }
-  
-  .create-btn {
-    background-color: #606060;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .create-btn:hover {
-    background-color: #505050;
-  }
-  
-  .button-group {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-  }
-  
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .modal-content {
-    background-color: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-    width: 450px;
-  }
-  
-  .modal-input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 20px;
-    border: 1px solid #d0d0d0;
-    border-radius: 5px;
-  }
-  
-  .modal-buttons {
-    display: flex;
-    justify-content: flex-end;
-  }
-  
-  .modal-btn {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .submit-btn {
-    background-color: #606060;
-    color: white;
-  }
-  
-  .submit-btn:hover {
-    background-color: #505050;
-  }
-  
-  .close-btn {
-    background-color: #a9a9a9;
-    color: white;
-  }
-  
-  .close-btn:hover {
-    background-color: #8a8a8a;
-  }
-  
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  border: 2px solid #d0d0d0;
+  margin: 40px auto;
+  max-width: 100%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: #ffffff;
+  background-color: #3498db;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #2980b9;
+}
+
+.top-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dropdown-date-container {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.dropdown, .date-input, .search-bar {
+  padding: 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 5px;
+  background-color: #f8f8f8;
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.05);
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.search-bar {
+  flex-grow: 2;
+  min-width: 300px;
+}
+
+.create-btn {
+  background-color: #2980b9;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.create-btn:hover {
+  background-color: #2471a3;
+}
+
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  width: 450px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #d0d0d0;
+  border-radius: 5px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+  color: #444;
+}
+
+h3 {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  color: #333;
+}
+.modal-buttons {
+  display: flex;
+  justify-content: center; /* Center the buttons horizontally */
+  gap: 15px; /* Space between the buttons */
+  margin-top: 20px;
+}
+
+.modal-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  flex: 1; /* Allows the buttons to take equal width */
+  max-width: 150px; /* Sets a max width to prevent the buttons from becoming too large */
+  text-align: center; /* Ensure the text inside the button is centered */
+}
+
+.submit-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.submit-btn:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.cancel-btn {
+  background-color: #a9a9a9;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #8a8a8a;
+  transform: translateY(-2px);
+}

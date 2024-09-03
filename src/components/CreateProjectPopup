@@ -1,0 +1,75 @@
+import React, { useState } from 'react';
+import '../styles/CreateProjectPopup.css';
+
+function CreateProjectPopup({ onClose, onSave }) {
+  const [projectName, setProjectName] = useState('');
+  const [apiCollectionName, setApiCollectionName] = useState('');
+  const [inputFormat, setInputFormat] = useState('Postman Collection');
+  const [file, setFile] = useState(null);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleSave = () => {
+    onSave(projectName, apiCollectionName, file);
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-header">
+          <button className="close-btn" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="modal-body">
+          <h2>Create New API Project</h2>
+
+          <div className="form-group">
+            <label htmlFor="projectName">Project Name</label>
+            <input
+              type="text"
+              id="projectName"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="apiCollectionName">API Collection Name</label>
+            <input
+              type="text"
+              id="apiCollectionName"
+              value={apiCollectionName}
+              onChange={(e) => setApiCollectionName(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="inputFormat">Input Data Format</label>
+            <select
+              id="inputFormat"
+              value={inputFormat}
+              onChange={(e) => setInputFormat(e.target.value)}
+            >
+              <option value="Postman Collection">Postman Collection</option>
+              <option value="Swagger">Swagger</option>
+              <option value="Json File">Json File</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="uploadJson">Upload API Collection JSON</label>
+            <input type="file" id="uploadJson" onChange={handleFileChange} />
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button className="submit-btn" onClick={handleSave}>Submit</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default CreateProjectPopup;

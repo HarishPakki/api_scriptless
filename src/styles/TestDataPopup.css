@@ -15,10 +15,10 @@
   background-color: #fff;
   padding: 30px;
   border-radius: 15px;
-  width: 80%;
+  width: 90%;
   max-width: 900px;
-  max-height: 80%;
-  overflow: hidden;
+  max-height: 90%;
+  overflow-y: auto;
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -26,7 +26,7 @@
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 15px;
@@ -38,25 +38,10 @@
   color: #606060;
 }
 
-.close-btn {
-  background-color: #a9a9a9;
-  color: white;
-  padding: 10px 15px;
-  font-size: 1.2rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.close-btn:hover {
-  background-color: #8a8a8a;
-}
-
 .modal-body {
   flex-grow: 1;
   overflow-y: auto;
-  overflow-x: hidden;
-  max-height: 400px; /* Ensures that the content inside scrolls when needed */
+  max-height: 400px;
   padding-right: 10px;
 }
 
@@ -73,21 +58,108 @@ table th, table td {
 
 .modal-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   padding-top: 15px;
   border-top: 1px solid #d0d0d0;
+  gap: 15px;
 }
 
-.save-btn {
-  background-color: #606060;
+.save-btn,
+.close-btn {
+  background-color: #2980b9;
   color: white;
-  padding: 12px 20px;
+  padding: 12px 25px;
   font-size: 1rem;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.save-btn:hover {
-  background-color: #505050;
+.save-btn:hover,
+.close-btn:hover {
+  background-color: #1f639a;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.input-group label {
+  flex: 1;
+  font-weight: bold;
+}
+
+.input-group input {
+  flex: 2;
+  margin-left: 10px;
+  min-width: 200px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.array-items-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.array-items-container .array-item {
+  margin-right: 10px;
+  margin-bottom: 10px;
+  flex-grow: 1;
+  min-width: 150px;
+  max-width: 100%;
+}
+
+.nested-field {
+  margin-left: 20px;
+}
+
+.nested-fields-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: 20px;
+}
+
+.nested-fields-container .input-group {
+  margin-right: 20px;
+  flex-grow: 1;
+  min-width: 200px;
+  max-width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    max-width: 700px;
+    max-height: 95%;
+    padding: 20px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .save-btn,
+  .close-btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    width: auto;
+  }
+
+  .modal-body {
+    max-height: 300px;
+  }
+
+  .input-group label {
+    flex: 0.7;
+    font-size: 0.9rem;
+  }
+
+  .input-group input {
+    flex: 1.3;
+  }
 }
