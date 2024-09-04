@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import '../styles/apiExecution.css';
-import LogModal from './LogModal';
+import LogModal from './LogModal'; // Import a modal component for logs
 
 function ApiExecution() {
   const { projectName, collectionName } = useParams();
@@ -76,81 +76,61 @@ function ApiExecution() {
     return obj;
   };
 
-  const extractValueFromResponse = (response, key) => {
-    const keys = key.split('.');
-    let value = response;
-    for (let k of keys) {
-      if (k.includes('{')) {
-        const [arrayKey, condition] = k.split('{');
-        const [conditionKey, conditionValue] = condition.replace('}', '').split('=');
-        value = value[arrayKey].find(item => item[conditionKey] === conditionValue);
-      } else {
-        value = value[k];
-      }
-    }
-    return value;
-  };
-
   const executeRequests = async () => {
     setLoading(true);
     const results = [];
-    const responseStore = {}; // Store all responses to use in subsequent requests
 
     for (let i = 0; i < excelData.length; i++) {
       const testData = excelData[i];
       const testCaseResults = [];
       let testCaseStatus = 'Passed';
+      let xAccOpId = '';
 
       for (let j = 0; j < requestDetails.requests.length; j++) {
         const request = requestDetails.requests[j];
         let modifiedRequest = { ...request };
-        const log = {
-          originalUrl: request.url,
-          modifiedUrl: '',
-          headers: request.headers,
-          body: request.body,
-          status: '',
-          response: null
-        };
+        const log = { originalUrl: request.url, modifiedUrl: '', headers: request.headers, body: request.body, status: '', response: null };
 
-        // Replace placeholders in the URL, headers, and body
+        // Replace placeholders in the URL and body
         modifiedRequest.url = replacePlaceholders(modifiedRequest.url, testData);
-        modifiedRequest.headers = replacePlaceholders(modifiedRequest.headers, testData);
+        log.modifiedUrl = modifiedRequest.url;
+
         if (modifiedRequest.method === 'POST' && modifiedRequest.body) {
           modifiedRequest.body = replacePlaceholders(JSON.parse(modifiedRequest.body), testData);
           modifiedRequest.body = JSON.stringify(modifiedRequest.body);
         }
 
-        // Log the modified request details
-        log.modifiedUrl = modifiedRequest.url;
-        log.headers = modifiedRequest.headers;
-        log.body = modifiedRequest.body;
+        // Update headers with x-acc-op if available
+        if (xAccOpId) {
+          modifiedRequest.headers['x-acc-op'] = xAccOpId;
+        }
 
+        // Execute the request
         try {
+          const headers = {};
+          modifiedRequest.headers.forEach(header => {
+            headers[header.key] = header.value
+          })
           const response = await fetch(modifiedRequest.url, {
             method: modifiedRequest.method,
-            headers: modifiedRequest.headers,
+            headers: headers,
             body: modifiedRequest.method === 'POST' ? modifiedRequest.body : undefined,
-            mode: 'cors'
           });
 
           log.status = response.ok ? 'Passed' : 'Failed';
-          log.response = await response.json();
+          log.response = await response.json(); // Capture the response
+          log.responseStatus = response.status;
+
+          if (log.response && log.response['x-acc-op']) {
+            xAccOpId = log.response['x-acc-op'];
+          }
+
           if (!response.ok) {
             const errorText = await response.text();
             log.error = `Request failed with status ${response.status}: ${errorText}`;
             testCaseStatus = 'Failed';
             break; // Stop further requests in the current test case
           }
-
-          // Store the response for use in subsequent requests
-          responseStore[`response${j + 1}`] = log.response;
-
-          // Automatically replace x-acc-op in subsequent requests
-          if (log.response['x-acc-op']) {
-            testData['x-acc-op'] = log.response['x-acc-op'];
-          }
-
         } catch (error) {
           console.error('Error executing request:', error);
           log.status = 'Failed';
@@ -261,4 +241,3 @@ function ApiExecution() {
 }
 
 export default ApiExecution;
-
