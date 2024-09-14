@@ -1,12 +1,19 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const cors = require('cors');
+const cors = require('cors'); // Ensure you have cors imported
 const compromise = require('compromise');  // Add compromise for NLP
-
+const https=require("https");
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+// Use the CORS middleware for all routes
+app.use(cors({
+    origin: '*', // You can specify a domain or use '*' to allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+    credentials: true // If you need to handle cookies and credentials
+}));
 
 const savedRequestsDir = path.join(__dirname, 'saved_requests');
 
@@ -127,6 +134,59 @@ app.post('/save-requests', (req, res) => {
     });
 });
 
+app.post('/api-Trigger', async(req, res) => {
+    const body=req.body
+    const response=await handleAPIRequest(body);
+    console.log('response is',response);
+    res.status(200).json(response);
+});
+
+const handleAPIRequest = (body) => {
+    return new Promise((resolve) => {
+      console.log('body.headers', body.headers);
+      console.log('body.method', body.method);
+  
+      const options = {
+        method: body.method,
+        headers: body.headers,
+        rejectUnauthorized: false,
+      };
+  
+      const req = https.request(body.url, options, (res) => {
+        let responseBody = '';
+        res.on('data', (chunk) => {
+          responseBody += chunk;
+        });
+        res.on('end', () => {
+          const responseHeaders = res.headers;
+          const statusCode = res.statusCode; // Add status code to response
+  
+          // Resolve with status code, headers, and body
+          resolve({
+            body: responseBody,
+            headers: responseHeaders,
+            status: statusCode,
+          });
+        });
+      });
+  
+      req.on('error', (err) => {
+        // Handle errors and resolve with error message
+        console.error(`Error making request to ${body.url}:`, err.message);
+        resolve({
+          success: false,
+          error: `Request failed: ${err.message}`,
+        });
+      });
+  
+      if (body.body && body.method === 'POST') {
+        req.write(JSON.stringify(body.body));
+      }
+  
+      req.end();
+    });
+  };
+  
 // Route to fetch all saved requests from the folder
 app.get('/get-requests', (req, res) => {
     fs.readdir(savedRequestsDir, (err, files) => {
@@ -185,6 +245,8 @@ app.get('/get-collection/:projectName/:apiCollectionName', (req, res) => {
         }
     });
 });
+
+
 
 // Start the server
 const PORT = process.env.PORT || 5000;

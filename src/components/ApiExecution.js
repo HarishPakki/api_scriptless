@@ -78,16 +78,28 @@ function ApiExecution() {
       .catch(error => console.error('Error fetching settings:', error));
   }, [projectName, collectionName]);
   function getNestedValue(obj, path) {
-    return path.split('.').reduce((value, key) => {
-      // Handle array indexes like [0]
-      const match = key.match(/\[(\d+)\]/);
+    return path.split('.').reduce((acc, key) => {
+      const match = key.match(/\[(\d+)\]/);  // Match array indexes like [0]
       if (match) {
         const index = parseInt(match[1], 10);
-        return Array.isArray(value) ? value[index] : undefined;
+        const arrayKey = key.split('[')[0];  // Get the key before the array index
+        const array = acc[arrayKey];  // Access the array based on the key
+        return Array.isArray(array) ? array[index] : undefined;  // Return the array element
       }
-      return value && value[key] !== undefined ? value[key] : undefined;
+      return acc && acc[key] !== undefined ? acc[key] : undefined;  // Return object property
     }, obj);
   }
+  
+  function displayJsonStructure(jsonArray) {
+    jsonArray.forEach((obj, index) => {
+      console.log(`${index}:`);
+      Object.keys(obj).forEach(key => {
+        console.log(`  ${key}: ${JSON.stringify(obj[key], null, 2)}`);
+      });
+    });
+  }
+  
+  
 
   const handleExcelUpload = (e) => {
     const file = e.target.files[0];
@@ -102,61 +114,94 @@ function ApiExecution() {
     };
     reader.readAsBinaryString(file);
   };
-
-  // Replace the placeholder using your existing responseStore
-  function replaceResponsePlaceholders(requestData) {
-    const placeholderRegex = /\{\{(response\d+)(.*)\}\}/g; // Matches {{response1.key}} or {{response2.nested.key}}
-
-    const replacer = (match, responseKey, path) => {
-      const responseIndex = responseKey.replace('response', ''); // Get response number (e.g., response1 -> 1)
-      const response = responseStore[`response${responseIndex}`]; // Fetch from responseStore
-      const cleanPath = path.replace(/^\./, ''); // Clean the path (remove leading dot)
-      const value = getNestedValue(response, cleanPath); // Get the nested value from the response
-
-      console.log(`Replacing placeholder ${match} with value:`, value);
-      return value !== undefined ? value : match; // If value exists, replace it, else keep placeholder
-    };
-
-    // Replace in URL
-    if (typeof requestData.url === 'string') {
-      requestData.url = requestData.url.replace(placeholderRegex, replacer);
-    }
-
-    // Replace in body if it is a string or an object
-    if (typeof requestData.body === 'string') {
-      requestData.body = requestData.body.replace(placeholderRegex, replacer);
-    } else if (typeof requestData.body === 'object') {
-      requestData.body = replacePlaceholdersInObject(requestData.body, placeholderRegex, replacer);
-    }
-
-    // Replace in headers
-    if (typeof requestData.headers === 'object') {
-      for (let key in requestData.headers) {
-        if (typeof requestData.headers[key] === 'string') {
-          requestData.headers[key] = requestData.headers[key].replace(placeholderRegex, replacer);
+  function replaceResponsePlaceholders(content, testData) {
+    // This function processes the placeholders inside strings or objects
+    const processPlaceholders = (str) => {
+      // Function to resolve each placeholder (like {{response1.body[0].userId}})
+      const resolvePlaceholder = (placeholder) => {
+        const strippedPlaceholder = placeholder.slice(2, -2).trim(); // Remove '{{' and '}}'
+        const [responseKey, ...pathParts] = strippedPlaceholder.split('.'); // Split by dot notation
+  
+        // Ensure it's a valid response reference
+        if (!responseKey.startsWith('response')) {
+          return placeholder; // If not a valid response placeholder, return the original placeholder
         }
+  
+        const responseIndex = responseKey.replace('response', ''); // Extract the response index (like response1)
+        const response = responseStore[`response${responseIndex}`]; // Get the corresponding response from the responseStore
+  
+        if (!response) {
+          console.warn(`Response${responseIndex} not found in responseStore!`);
+          return placeholder; // Return the original placeholder if no response found
+        }
+  
+        // Get the value from the response body using the path (e.g., body[0].userId)
+        const value = getNestedValue(response.body, pathParts.join('.'));
+  
+        // Return the resolved value or the original placeholder if not found
+        return value !== undefined ? value : placeholder;
+      };
+  
+      // A loop that finds and replaces placeholders in the string
+      let result = '';
+      let start = 0;
+      while (start < str.length) {
+        const openIndex = str.indexOf('{{', start); // Find opening {{
+        if (openIndex === -1) {
+          result += str.slice(start); // Append the rest of the string
+          break;
+        }
+        result += str.slice(start, openIndex); // Append part before {{
+        const closeIndex = str.indexOf('}}', openIndex); // Find closing }}
+        if (closeIndex === -1) {
+          result += str.slice(openIndex); // Append the rest if no closing }}
+          break;
+        }
+        const placeholder = str.slice(openIndex, closeIndex + 2); // Extract placeholder {{...}}
+        result += resolvePlaceholder(placeholder); // Resolve the placeholder
+        start = closeIndex + 2; // Move to the next part of the string
       }
-    }
-
-    return requestData;
-  }
-
-  // Helper method to recursively replace placeholders in an object
-  function replacePlaceholdersInObject(obj, placeholderRegex, replacer) {
-    if (typeof obj === 'object') {
+      return result;
+    };
+  
+    // Helper function to process objects and replace placeholders in string values
+    const processObjectPlaceholders = (obj) => {
       Object.keys(obj).forEach(key => {
         if (typeof obj[key] === 'string') {
-          obj[key] = obj[key].replace(placeholderRegex, replacer);
+          obj[key] = processPlaceholders(obj[key]); // Process strings
         } else if (typeof obj[key] === 'object') {
-          // Recursively replace in nested objects
-          obj[key] = replacePlaceholdersInObject(obj[key], placeholderRegex, replacer);
+          processObjectPlaceholders(obj[key]); // Recursively process nested objects
         }
       });
+      return obj;
+    };
+  
+    // Process content based on its type (string or object)
+    if (typeof content === 'string') {
+      return processPlaceholders(content);
+    } else if (typeof content === 'object') {
+      return processObjectPlaceholders(content);
     }
-    return obj;
+  
+    return content; // Return content as is if it's not a string or object
   }
-
-
+  
+  // Helper function to retrieve a nested value from an object (handles deep paths)
+  function getNestedValue(obj, path) {
+    // Split the path by dot notation and array indices
+    const keys = path.split('.').flatMap(key => {
+      // This will split by dot but also handle array-like access like 'body[0]'
+      const match = key.match(/([^\[\]]+)|(\[\d+\])/g); 
+      return match ? match.map(k => k.startsWith('[') ? parseInt(k.slice(1, -1)) : k) : key;
+    });
+  
+    // Traverse the object using the keys
+    return keys.reduce((acc, key) => {
+      return acc && acc[key] !== undefined ? acc[key] : undefined;
+    }, obj);
+  }
+  
+  
   const executeRequests = async () => {
     setLoading(true);
     const results = [];
@@ -178,7 +223,7 @@ function ApiExecution() {
         log.modifiedUrl = modifiedRequest.url;
 
         if (modifiedRequest.method === 'POST' && modifiedRequest.body) {
-          modifiedRequest.body = replaceResponsePlaceholders(JSON.parse(modifiedRequest.body), testData);
+          modifiedRequest.body = replaceResponsePlaceholders((modifiedRequest.body), testData);
           modifiedRequest.body = JSON.stringify(modifiedRequest.body);
         }
 
