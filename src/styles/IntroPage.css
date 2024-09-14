@@ -1,0 +1,39 @@
+/* /* IntroPage.css
+
+/* Full-screen container for the carousel */
+/* .intro-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.intro-section {
+  text-align: center;
+  padding: 20px;
+}
+
+.intro-section img {
+  width: 100%;
+  height: auto;
+  max-width: 800px;
+  margin: 0 auto;
+  border-radius: 12px;
+}
+
+button[data-carousel-prev], button[data-carousel-next] {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+}
+
+button[data-carousel-prev]:hover, button[data-carousel-next]:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+button[data-carousel-prev] svg, button[data-carousel-next] svg {
+  width: 24px;
+  height: 24px;
+} */

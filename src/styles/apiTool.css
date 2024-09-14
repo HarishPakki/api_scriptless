@@ -1,3 +1,5 @@
+/* apiTool.scss */
+
 .api-tool-container {
   padding: 20px;
   background-color: #ffffff;
@@ -70,6 +72,61 @@
   justify-content: flex-end;
   gap: 15px;
   flex-wrap: wrap;
+}
+
+.project-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.project-table th, .project-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.edit-icon {
+  color: #3498db;
+}
+
+.execute-icon {
+  color: #27ae60;
+}
+
+.delete-icon {
+  color: #e74c3c;
+}
+
+.icon-btn:hover .edit-icon,
+.icon-btn:hover .execute-icon,
+.icon-btn:hover .delete-icon {
+  transform: scale(1.2);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.page-btn {
+  background-color: #f0f0f0;
+  padding: 10px;
+  margin: 0 5px;
+  border: none;
+  cursor: pointer;
+}
+
+.page-btn.active {
+  background-color: #3498db;
+  color: white;
 }
 
 .modal-overlay {

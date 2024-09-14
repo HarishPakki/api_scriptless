@@ -185,3 +185,24 @@
   }
 }
 
+.proceed-button-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.proceed-btn {
+  padding: 12px 25px;
+  background-color: #2980b9;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.proceed-btn:hover {
+  background-color: #1f639a;
+  transform: translateY(-3px);
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/TestDataPopup.css';
 
 function TestDataPopup({ request, onClose, onSave, requestType }) {
@@ -8,7 +8,7 @@ function TestDataPopup({ request, onClose, onSave, requestType }) {
     queryParams: request.url ? extractQueryParams(request.url) : {},
   });
 
-  // Format headers for easier manipulation
+  // Ensure correct format for headers
   function formatHeaders(headersArray) {
     const headers = {};
     if (Array.isArray(headersArray)) {
@@ -34,44 +34,22 @@ function TestDataPopup({ request, onClose, onSave, requestType }) {
     }
   }
 
-  // Function to parse body based on the request type
+  // Parse the body based on the request type
   function parseBodyBasedOnType(body, type) {
-    if (type === 'Postman Collection') {
-      return parsePostmanBody(body);
-    } else if (type === 'Json File') {
-      return parseJsonBody(body);
-    } else {
-      return {};
-    }
-  }
-
-  // Parse the body from a Postman collection
-  function parsePostmanBody(body) {
-    if (!body) return {};
+    if (!body) return {}; // Return empty object if body is null
     if (typeof body === 'string') {
+      // Attempt to parse string body as JSON
       try {
-        const parsedBody = JSON.parse(body);
-        console.log("Parsed Postman body:", parsedBody);
-        return parsedBody;
+        return JSON.parse(body);
       } catch (error) {
-        console.warn('Postman body is not valid JSON. Returning raw string.');
-        return body;
+        console.warn('Failed to parse JSON body:', error);
+        return { raw: body }; // Return raw string if parsing fails
       }
     }
-    return {};
+    return body; // Return body if it's already an object
   }
 
-  // Parse the body if it's in JSON format (for JSON requests)
-  function parseJsonBody(body) {
-    try {
-      return JSON.parse(body);
-    } catch (error) {
-      console.error('Failed to parse JSON body:', error);
-      return {};
-    }
-  }
-
-  // Handle input changes for non-nested fields
+  // Handle input changes for non-nested fields (headers, query params)
   const handleInputChange = (e, section, key) => {
     setEditedData({
       ...editedData,
@@ -82,7 +60,7 @@ function TestDataPopup({ request, onClose, onSave, requestType }) {
     });
   };
 
-  // Handle input changes for nested fields
+  // Handle input changes for nested fields (body)
   const handleNestedInputChange = (e, section, path) => {
     const keys = path.split('.');
     setEditedData((prevData) => {
@@ -101,6 +79,7 @@ function TestDataPopup({ request, onClose, onSave, requestType }) {
     });
   };
 
+  // Render nested fields for body, arrays, and objects
   const renderNestedFields = (obj, section, parentKey = '') => {
     return Object.keys(obj).map((key) => {
       const value = obj[key];
@@ -146,15 +125,17 @@ function TestDataPopup({ request, onClose, onSave, requestType }) {
     });
   };
 
+  // Handle save operation
   const handleSave = () => {
     onSave({
       ...request,
       headers: Object.keys(editedData.headers).map(key => ({ key, value: editedData.headers[key] })),
-      body: JSON.stringify(editedData.body),
+      body: JSON.stringify(editedData.body), // Stringify the updated body
       url: updateUrlWithParams(request.url, editedData.queryParams),
     });
   };
 
+  // Update URL with query parameters
   const updateUrlWithParams = (url, queryParams) => {
     const urlObj = new URL(url);
     Object.keys(queryParams).forEach((key) => {
@@ -176,7 +157,7 @@ function TestDataPopup({ request, onClose, onSave, requestType }) {
             <tbody>
               {Object.keys(editedData.headers || {}).map((key) => (
                 <tr key={key}>
-                                   <td>{key}</td>
+                  <td>{key}</td>
                   <td>
                     <input
                       type="text"
@@ -209,7 +190,11 @@ function TestDataPopup({ request, onClose, onSave, requestType }) {
 
           <h3>Body</h3>
           <div className="nested-fields">
-            {renderNestedFields(editedData.body, 'body')}
+            {Object.keys(editedData.body).length > 0 ? (
+              renderNestedFields(editedData.body, 'body')
+            ) : (
+              <p>No body data available</p>
+            )}
           </div>
         </div>
 
@@ -223,4 +208,3 @@ function TestDataPopup({ request, onClose, onSave, requestType }) {
 }
 
 export default TestDataPopup;
-

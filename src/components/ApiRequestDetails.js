@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
+import { FaArrowLeft } from 'react-icons/fa'; // Importing back arrow icon
 import '../styles/apiRequestDetails.css';
 import '../styles/ProxyAndEnvSettings.css';
 import TestDataPopup from './TestDataPopup';
 import ProxyAndEnvSettings from './ProxyAndEnvSettings';
-import { saveToLocalStorage, getFromLocalStorage, saveSettingsToFile, loadSettingsFromFile } from '../utils/localStorageUtils';
+import { saveSettingsToFile, loadSettingsFromFile } from '../utils/localStorageUtils';
 
 function ApiRequestDetails() {
   const location = useLocation();
   const navigate = useNavigate();
-  const modifiedRequestsRef = useRef([]);
   const { projectName, apiCollectionName, requests, requestType } = location.state || { projectName: '', apiCollectionName: '', requests: [], requestType: 'json' };
   const [showPopup, setShowPopup] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -22,6 +22,7 @@ function ApiRequestDetails() {
   const [proxySettings, setProxySettings] = useState({});
   const [envVariables, setEnvVariables] = useState([]);
   const [modifiedRequests, setModifiedRequests] = useState([...requests]);
+  const [showProceedButton, setShowProceedButton] = useState(false); // Added state for the proceed button
 
   useEffect(() => {
     if (!projectName || !apiCollectionName || requests.length === 0) {
@@ -59,9 +60,10 @@ function ApiRequestDetails() {
     }
   };
 
-  const openTestDataPopup = (request, index, type) => {
+  const openTestDataPopup = (request, index) => {
     const modifiedRequest = modifiedRequests[index];
-    setSelectedRequest({ ...modifiedRequest, index });
+    const bodyData = modifiedRequest.body ? JSON.parse(modifiedRequest.body) : {}; // Parse the body as JSON
+    setSelectedRequest({ ...modifiedRequest, index, bodyData }); // Include parsed body data
     setShowPopup(true);
   };
 
@@ -112,6 +114,9 @@ function ApiRequestDetails() {
         saveSettingsToFile(folderName, 'collection.json', modifiedRequests);
         saveSettingsToFile(folderName, 'proxy.json', proxySettings);
         saveSettingsToFile(folderName, 'globalData.json', envVariables);
+
+        // Show the Proceed button after successful submission
+        setShowProceedButton(true); // Enable proceed button here
       } else {
         console.error('Failed to save requests');
       }
@@ -170,8 +175,23 @@ function ApiRequestDetails() {
     }
   };
 
+  const proceedToExecution = () => {
+    navigate(`/execution/${projectName}/${apiCollectionName}`); // Navigate to the execution page
+  };
+
+  const goBackToApiTool = () => {
+    navigate('/api-tool'); // Navigate back to ApiTool page
+  };
+
   return (
     <div className="request-details-container">
+      {/* Back Button */}
+      <div className="back-button-container">
+        <button className="back-btn" onClick={goBackToApiTool}>
+          <FaArrowLeft /> Back
+        </button>
+      </div>
+
       <h1 className="title">Project Name: {projectName}</h1>
       <h2 className="sub-title">API Collection: {apiCollectionName}</h2>
 
@@ -205,7 +225,8 @@ function ApiRequestDetails() {
         <thead>
           <tr>
             <th>Request #</th>
-            <th>EndPoint</th>
+            <th>Method</th> {/* New Method column */}
+            <th>Endpoint</th>
             <th>Actions</th>
             <th>Reorder</th>
           </tr>
@@ -213,10 +234,11 @@ function ApiRequestDetails() {
         <tbody>
           {modifiedRequests.length > 0 && modifiedRequests.map((request, index) => (
             <tr key={index}>
-              <td>Request {index + 1}</td>
+              <td>{index + 1}</td>
+              <td>{request.method}</td> {/* Displaying method data */}
               <td>{extractEndpoint(request.url)}</td>
               <td>
-                <button className="edit-testdata-btn" onClick={() => openTestDataPopup(request, index, requestType)}>
+                <button className="edit-testdata-btn" onClick={() => openTestDataPopup(request, index)}>
                   Edit Test Data
                 </button>
               </td>
@@ -235,14 +257,21 @@ function ApiRequestDetails() {
         </button>
       </div>
 
+      {/* Conditionally render the proceed button after successful submission */}
+      {showProceedButton && (
+        <div className="proceed-button-container">
+          <button onClick={proceedToExecution} className="proceed-btn">
+            Proceed with Execution
+          </button>
+        </div>
+      )}
+
       {showPopup && selectedRequest && (
         <TestDataPopup
           request={selectedRequest}
           onClose={closePopup}
           onSave={handleSave}
-          requestType={requestType}
-       
-          />
+        />
       )}
 
       {showProxyEnvPopup && (
