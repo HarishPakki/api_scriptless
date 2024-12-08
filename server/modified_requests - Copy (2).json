@@ -1,0 +1,57 @@
+{
+  "projectName": "Sample1",
+  "apiCollectionName": "sample",
+  "createdDate": "2024-08-28T07:16:38.706Z",
+  "requests": [
+    {
+      "method": "GET",
+      "headers": {
+        "x-source-date-time": "2024-08-03T23:10:26.990+08:00",
+        "x-source-country": "sample",
+        "Referer": "https://ebanking-uat.ocbc.com.hk/digital/web/hk/cfo/fund-transfers?locale=en_US&region=HK",
+        "x-lang-id": "sample",
+        "x-source-id": "IBSS",
+        "x-correlation-id": "eb4642c94cf81b0cc04de50d84b",
+        "x-acc-op": "DJcIpTFVv+MqxAkIanI5WLoWxYesS719n",
+        "Content-Type": "application/json"
+      },
+      "url": "https://ebanking-uat.ocbc.com.hk/digital/api/account-hk/v2/all-accounts?functionCode=fund-transfer-to-updated&withBalance=true&withCache=false",
+      "index": 0,
+      "body": "{}"
+    },
+    {
+      "method": "POST",
+      "headers": {
+        "x-source-org-code": "0830",
+        "x-source-date-time": "2024-08-03T23:10:06",
+        "x-source-country": "sample",
+        "Referer": "https://ebanking-uat.ocbc.com.hk/digital/web/hk/cfo/portfolioLocale=en_US&region=HK",
+        "x-lang-id": "sample_updated",
+        "x-source-id": "IBSS",
+        "x-correlation-id": "c99a06le-46f6-483-b2a6-514b41bed5d1",
+        "x-acc-op": "DJcIpTFVv+MqxAkIanI5WLoWxYesS719n",
+        "accept": "*/*",
+        "Content-Type": "application/json"
+      },
+      "body": "{\"withCache\":false}",
+      "url": "https://ebanking-uat.ocbc.com.hk/digital/api/portfolio-wealth-hk/v2/portfolio_summary/inquiry",
+      "index": 1
+    },
+    {
+      "method": "POST",
+      "headers": {
+        "x-source-date-time": "2024-08-03T23:10:26.993+08:00",
+        "x-source-country": "HK",
+        "Referer": "https://ebanking-uat.ocbc.com.hk/digital/web/hk/cfo/fund-transfers?locale=en_US&region=HK",
+        "x-lang-id": "en_US",
+        "x-source-id": "IBSS",
+        "x-correlation-id": "0472ff7508cd46442178940f336d336f9",
+        "x-acc-op": "DJcIpTFVv+MqxAkIanI5WLoWxYesS719n",
+        "Content-Type": "sample"
+      },
+      "body": "{\"type\":\"LOCAL_BANK\"}",
+      "url": "https://ebanking-uat.ocbc.com.hk/digital/api/fund-transfers-hk/v1/payee/query",
+      "index": 2
+    }
+  ]
+}
